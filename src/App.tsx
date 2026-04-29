@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
+import Lenis from 'lenis';
 import Hero from './components/Hero';
 import About from './components/About';
 import Skills from './components/Skills';
@@ -65,6 +66,12 @@ function PortfolioApp() {
   
   // Initialize scroll reveal animations
   addScrollRevealToElements();
+
+  // Initialize Lenis smooth scrolling
+  useEffect(() => {
+    const lenis = new Lenis({ autoRaf: true });
+    return () => lenis.destroy();
+  }, []);
   
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -152,7 +159,7 @@ function PortfolioApp() {
 
 
         
-        <div className="relative z-10">
+        <div className="relative z-10 portfolio-main-content">
           <section id="hero"><Hero /></section>
           <Terminal />
           <Domains />

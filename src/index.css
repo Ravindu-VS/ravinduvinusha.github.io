@@ -797,7 +797,8 @@
 
 /* ── Mobile padding for bottom nav bar ──────────────────────────────────── */
 @media (max-width: 768px) {
-  .relative.z-10 {
+  /* Add padding so content isn't hidden behind the mobile bottom nav */
+  .portfolio-main-content {
     padding-bottom: 4rem;
   }
 }

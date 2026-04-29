@@ -10,6 +10,8 @@ const BIOS_STEPS = [
   { icon: <Terminal className="w-7 h-7" />, text: 'READY' },
 ];
 
+// Session key: loading screen is shown only once per browser session.
+// Clearing sessionStorage will cause it to show again on the next visit.
 const SESSION_KEY = 'rv_portfolio_loaded';
 
 const LoadingScreen = () => {

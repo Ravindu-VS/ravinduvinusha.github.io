@@ -53,7 +53,7 @@ export default function Projects() {
   // Listen for domain quick-jump events from Navigation
   useEffect(() => {
     const handler = (e: Event) => {
-      const domainId = (e as CustomEvent).detail as string;
+      const domainId = (e as CustomEvent<string>).detail;
       const cat = DOMAIN_CATEGORY_MAP[domainId];
       if (cat) setActiveCategory(cat);
     };
