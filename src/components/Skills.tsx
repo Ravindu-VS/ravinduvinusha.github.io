@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from 'framer-motion';
 import SkillRadarChart from './SkillRadarChart';
 import { 
   Code, 
@@ -18,6 +19,8 @@ import {
   CircuitBoard,
   Sparkles
 } from 'lucide-react';
+
+const LazySkillConstellation = lazy(() => import('./three/SkillConstellation'));
 
 const skillCategories = [
   {
@@ -203,6 +206,14 @@ const certifications = [
 
 export default function Skills() {
   const [activeSkillCategory, setActiveSkillCategory] = useState<string | undefined>(undefined);
+  const [show3D, setShow3D] = useState(false);
+  const reducedMotion = useReducedMotion();
+
+  // Flatten skill data for constellation
+  const allSkills = skillCategories.flatMap((cat) =>
+    cat.skills.map((s) => ({ ...s, category: cat.title }))
+  );
+
   return (
     <div className="py-20 relative overflow-hidden matrix-bg section-matrix" id="skills">
       <div className="absolute inset-0 bg-cyber-dark/50" />
@@ -221,7 +232,44 @@ export default function Skills() {
           <p className="text-xl text-gray-300 max-w-3xl mx-auto font-mono matrix-text">
             Specialized expertise across hardware, software, AI, and security domains
           </p>
+
+          {/* 3D constellation toggle — hidden when reduced motion */}
+          {!reducedMotion && (
+            <div className="mt-6">
+              <motion.button
+                onClick={() => setShow3D(!show3D)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="cyber-button hologram-effect text-sm"
+                aria-pressed={show3D}
+                aria-label="Toggle 3D constellation view"
+              >
+                {show3D ? '2D View' : '3D Constellation'}
+              </motion.button>
+            </div>
+          )}
         </motion.div>
+
+        {/* 3D Constellation View */}
+        {show3D && !reducedMotion && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="w-full h-[500px] mb-12 rounded-xl overflow-hidden border border-primary/20"
+            style={{ background: 'rgba(10,14,17,0.8)' }}
+          >
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center h-full text-primary font-mono text-sm">
+                  Loading constellation...
+                </div>
+              }
+            >
+              <LazySkillConstellation skills={allSkills} />
+            </Suspense>
+          </motion.div>
+        )}
 
         {/* Skill Proficiency Visualization - Compact */}
         <motion.div

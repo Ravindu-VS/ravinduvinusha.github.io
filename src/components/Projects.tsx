@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ExternalLink, Github, Linkedin, Bot, Shield, Brain, Wifi, Wrench, Globe, Smartphone, Folder } from 'lucide-react';
+import { Bot, Shield, Brain, Wifi, Wrench, Globe, Smartphone, Folder } from 'lucide-react';
 import { usePortfolioData, Project } from '../contexts/DataContext';
+import ProjectCard from './ui/ProjectCard';
 
 // Icon mapping based on category
 const getCategoryIcon = (category: string) => {
@@ -25,19 +26,40 @@ const getStatusLabel = (project: Project) => {
   const statusMap: Record<string, string> = {
     'completed': 'Completed',
     'in-progress': 'In Progress',
+    'live': 'Live',
     'planned': 'Planned'
   };
   return statusMap[project.status] || project.status;
 };
 
-// Projects data comes from DataContext
+// Enhanced filter pills matching domain labels
+const FILTER_PILLS = ['All', 'Robotics', 'AI/ML', 'IoT', 'Embedded', 'Vision', 'Security'];
 
-const categories = ['All', 'AI/IoT', 'Robotics/AI', 'AI/ML', 'Robotics', 'IoT', 'Web', 'Mobile'];
+// Domain → category mapping for quick-jump
+const DOMAIN_CATEGORY_MAP: Record<string, string> = {
+  robotics: 'Robotics',
+  ai: 'AI/ML',
+  iot: 'IoT',
+  embedded: 'Embedded',
+  vision: 'Vision',
+  hacking: 'Security',
+};
 
 export default function Projects() {
   const { data } = usePortfolioData();
   const [activeCategory, setActiveCategory] = useState('All');
   const [hoveredProject, setHoveredProject] = useState<string | null>(null);
+
+  // Listen for domain quick-jump events from Navigation
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const domainId = (e as CustomEvent).detail as string;
+      const cat = DOMAIN_CATEGORY_MAP[domainId];
+      if (cat) setActiveCategory(cat);
+    };
+    window.addEventListener('filter-domain', handler);
+    return () => window.removeEventListener('filter-domain', handler);
+  }, []);
 
   // Debug logging
   console.log('📊 Projects component mounted. Data projects count:', data.projects.length);
@@ -89,19 +111,21 @@ export default function Projects() {
           </p>
         </motion.div>
 
-        {/* Category Filter */}
-        <div className="flex justify-center gap-4 mb-12 flex-wrap">
-          {(projectCategories.length > 1 ? projectCategories : categories).map((category) => (
+        {/* Category Filter — neon-bordered domain pills */}
+        <div className="flex justify-center gap-3 mb-12 flex-wrap">
+          {FILTER_PILLS.map((category) => (
             <motion.button
               key={category}
               onClick={() => setActiveCategory(category)}
-              className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 font-mono hologram-effect ${
+              className={`px-5 py-2 rounded-full font-medium transition-all duration-300 font-mono text-sm border ${
                 activeCategory === category
-                  ? 'cyber-glow bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary text-primary'
-                  : 'cyber-card border-cyber-light/30 text-gray-400 hover:text-accent hover:border-primary/50'
+                  ? 'bg-primary/20 border-primary text-primary'
+                  : 'border-primary/20 text-gray-400 hover:text-accent hover:border-primary/50'
               }`}
+              style={activeCategory === category ? { boxShadow: '0 0 10px rgba(0,255,136,0.3)' } : {}}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              aria-pressed={activeCategory === category}
             >
               {category}
             </motion.button>
@@ -112,120 +136,14 @@ export default function Projects() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           <AnimatePresence mode="wait">
             {filteredProjects.map((project, index) => (
-              <motion.div
+              <ProjectCard
                 key={project.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-                className="group relative"
+                project={project}
+                index={index}
+                isHovered={hoveredProject === project.title}
                 onMouseEnter={() => setHoveredProject(project.title)}
                 onMouseLeave={() => setHoveredProject(null)}
-              >
-                <div className="project-card-3d border-gradient-animated overflow-hidden h-full data-stream gpu-accelerated">
-                  <div className="relative aspect-video overflow-hidden">
-                    <img
-                      src={project.image}
-                      alt={project.title}
-                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-cyber-dark/90 via-cyber-dark/50 to-transparent" />
-                    
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-cyber-dark/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                      <div className="text-center p-6">
-                        <div className="flex items-center justify-center gap-3 mb-4">
-                          <div className="p-3 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 border border-primary/30">
-                            <span className="text-primary glow-effect">
-                              {project.icon}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex gap-3 justify-center">
-                          <motion.a
-                            href={project.demo}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="cyber-button text-sm"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <span className="flex items-center gap-2">
-                              <ExternalLink className="w-4 h-4" />
-                              Demo
-                            </span>
-                          </motion.a>
-                          <motion.a
-                            href={project.github}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="cyber-button text-sm"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <span className="flex items-center gap-2">
-                              <Github className="w-4 h-4" />
-                              Code
-                            </span>
-                          </motion.a>
-                          <motion.a
-                            href={project.linkedin}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="cyber-button text-sm"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <span className="flex items-center gap-2">
-                              <Linkedin className="w-4 h-4" />
-                              LinkedIn
-                            </span>
-                          </motion.a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 border border-primary/30">
-                        <span className="text-primary glow-effect">
-                          {project.icon}
-                        </span>
-                      </div>
-                      <h3 className="text-xl font-bold text-accent font-cyber">{project.title}</h3>
-                    </div>
-                    
-                    <p className="text-gray-400 mb-4 text-sm leading-relaxed">{project.desc}</p>
-                    
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {project.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-3 py-1 text-xs rounded-full bg-primary/20 border border-primary/30 text-primary font-mono matrix-text"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    
-                    <div className="space-y-2">
-                      {project.features.map((feature, i) => (
-                        <motion.div
-                          key={feature}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={hoveredProject === project.title ? { opacity: 1, x: 0 } : { opacity: 0.7, x: 0 }}
-                          transition={{ delay: i * 0.1 }}
-                          className="flex items-center gap-2 text-sm text-gray-300 font-mono"
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-primary to-secondary" />
-                          {feature}
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
+              />
             ))}
           </AnimatePresence>
         </div>

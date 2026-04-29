@@ -1,84 +1,81 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useSpring } from 'framer-motion';
 
 const CustomCursor = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [pos, setPos] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
   const [isClicking, setIsClicking] = useState(false);
 
+  // Lerp-lagged outer ring
+  const springX = useSpring(0, { stiffness: 150, damping: 20 });
+  const springY = useSpring(0, { stiffness: 150, damping: 20 });
+
   useEffect(() => {
-    const mouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: e.clientX,
-        y: e.clientY
-      });
+    const onMove = (e: MouseEvent) => {
+      setPos({ x: e.clientX, y: e.clientY });
+      springX.set(e.clientX);
+      springY.set(e.clientY);
     };
 
-    const mouseDown = () => setIsClicking(true);
-    const mouseUp = () => setIsClicking(false);
+    const onDown = () => setIsClicking(true);
+    const onUp = () => setIsClicking(false);
 
-    // Add hover effects for interactive elements
     const addHoverListeners = () => {
-      const interactiveElements = document.querySelectorAll('a, button, .cyber-card, .cyber-button');
-      
-      interactiveElements.forEach(el => {
+      const els = document.querySelectorAll('a, button, [role="button"], input, textarea, .cyber-card, .cyber-button');
+      els.forEach((el) => {
         el.addEventListener('mouseenter', () => setIsHovering(true));
         el.addEventListener('mouseleave', () => setIsHovering(false));
       });
     };
 
-    document.addEventListener('mousemove', mouseMove);
-    document.addEventListener('mousedown', mouseDown);
-    document.addEventListener('mouseup', mouseUp);
-    
-    // Add listeners after a brief delay to ensure elements are rendered
-    setTimeout(addHoverListeners, 100);
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('mouseup', onUp);
+    setTimeout(addHoverListeners, 300);
 
     return () => {
-      document.removeEventListener('mousemove', mouseMove);
-      document.removeEventListener('mousedown', mouseDown);
-      document.removeEventListener('mouseup', mouseUp);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('mouseup', onUp);
     };
-  }, []);
+  }, [springX, springY]);
+
+  const ringSize = isHovering ? 36 : isClicking ? 20 : 24;
+  const ringColor = isHovering ? '#ff0044' : '#0099ff';
 
   return (
     <>
-      {/* Main cursor */}
-      <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[9999] mix-blend-difference"
-        animate={{
-          x: mousePosition.x - 8,
-          y: mousePosition.y - 8,
-          scale: isClicking ? 0.8 : isHovering ? 1.5 : 1
+      {/* Inner dot — 6px neon green, no lag */}
+      <div
+        className="fixed pointer-events-none z-[9999]"
+        style={{
+          left: pos.x - 3,
+          top: pos.y - 3,
+          width: 6,
+          height: 6,
+          borderRadius: '50%',
+          background: '#00ff88',
+          boxShadow: '0 0 8px #00ff88',
+          transition: 'width 0.1s, height 0.1s',
         }}
-        transition={{
-          type: "spring",
-          stiffness: 500,
-          damping: 28
-        }}
-      >
-        <div className={`w-4 h-4 rounded-full border-2 ${
-          isHovering ? 'border-primary bg-primary/20' : 'border-accent'
-        } transition-colors duration-200`} />
-      </motion.div>
+      />
 
-      {/* Trailing effect */}
+      {/* Outer ring — lagged spring */}
       <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[9998]"
-        animate={{
-          x: mousePosition.x - 2,
-          y: mousePosition.y - 2
+        className="fixed pointer-events-none z-[9998]"
+        style={{
+          x: springX,
+          y: springY,
+          marginLeft: -(ringSize / 2),
+          marginTop: -(ringSize / 2),
+          width: ringSize,
+          height: ringSize,
+          border: `1.5px solid ${ringColor}`,
+          borderRadius: '50%',
+          boxShadow: `0 0 8px ${ringColor}66`,
+          transition: 'width 0.2s, height 0.2s, border-color 0.2s, box-shadow 0.2s',
         }}
-        transition={{
-          type: "spring",
-          stiffness: 200,
-          damping: 20
-        }}
-      >
-        <div className={`w-1 h-1 rounded-full ${
-          isHovering ? 'bg-primary' : 'bg-accent'
-        } transition-colors duration-200`} />
-      </motion.div>
+      />
     </>
   );
 };

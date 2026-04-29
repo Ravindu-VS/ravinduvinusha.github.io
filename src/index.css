@@ -770,6 +770,46 @@
   }
 }
 
+/* ── Holographic shimmer card overlay ─────────────────────────────────────── */
+.shimmer-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(0, 255, 136, 0.06) 50%,
+    transparent 60%
+  );
+  background-size: 200% 200%;
+  animation: shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ── Circuit SVG drift overlay (used in App.tsx inline) ─────────────────── */
+.circuit-svg-overlay path {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 0;
+  animation: circuit-drift 20s linear infinite;
+}
+
+/* ── Mobile padding for bottom nav bar ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .relative.z-10 {
+    padding-bottom: 4rem;
+  }
+}
+
+/* ── Reduced-motion overrides ────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-card::after,
+  .circuit-svg-overlay path {
+    animation: none;
+  }
+}
+
 /* Advanced Performance Optimizations */
 .gpu-accelerated {
   transform: translateZ(0);

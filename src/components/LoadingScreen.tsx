@@ -1,36 +1,50 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, Cpu, Shield, Brain } from 'lucide-react';
+import { Terminal, Cpu, Shield, Brain, Eye } from 'lucide-react';
+
+const BIOS_STEPS = [
+  { icon: <Brain className="w-7 h-7" />,    text: 'Initializing neural pathways...' },
+  { icon: <Cpu className="w-7 h-7" />,      text: 'Loading robotics module...' },
+  { icon: <Eye className="w-7 h-7" />,      text: 'Calibrating computer vision...' },
+  { icon: <Shield className="w-7 h-7" />,   text: 'Securing network channels...' },
+  { icon: <Terminal className="w-7 h-7" />, text: 'READY' },
+];
+
+const SESSION_KEY = 'rv_portfolio_loaded';
 
 const LoadingScreen = () => {
+  // Only show once per browser session
+  const [shouldShow] = useState(() => !sessionStorage.getItem(SESSION_KEY));
   const [loading, setLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
 
-  const loadingSteps = [
-    { icon: <Terminal className="w-8 h-8" />, text: "Initializing Neural Networks..." },
-    { icon: <Cpu className="w-8 h-8" />, text: "Connecting Hardware Interfaces..." },
-    { icon: <Shield className="w-8 h-8" />, text: "Securing Digital Channels..." },
-    { icon: <Brain className="w-8 h-8" />, text: "Bridging Minds and Machines..." }
-  ];
-
   useEffect(() => {
-    const stepDuration = 800;
-    const totalSteps = loadingSteps.length;
+    if (!shouldShow) return;
+
+    const stepDuration = 700;
 
     const stepInterval = setInterval(() => {
-      setCurrentStep(prev => {
-        if (prev < totalSteps - 1) {
+      setCurrentStep((prev) => {
+        if (prev < BIOS_STEPS.length - 1) {
           return prev + 1;
         } else {
           clearInterval(stepInterval);
-          setTimeout(() => setLoading(false), 500);
+          setTimeout(() => {
+            setLoading(false);
+            sessionStorage.setItem(SESSION_KEY, '1');
+          }, 600);
           return prev;
         }
       });
     }, stepDuration);
 
     return () => clearInterval(stepInterval);
-  }, []);
+  }, [shouldShow]);
+
+  // Skip on subsequent visits
+  if (!shouldShow) return null;
+
+  const progress = Math.round(((currentStep + 1) / BIOS_STEPS.length) * 100);
 
   return (
     <AnimatePresence>
@@ -51,7 +65,7 @@ const LoadingScreen = () => {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
               className="mb-8"
             >
               <div className="w-20 h-20 mx-auto border-2 border-primary rounded-lg flex items-center justify-center cyber-glow">
@@ -59,65 +73,75 @@ const LoadingScreen = () => {
               </div>
             </motion.div>
 
-            {/* Loading steps */}
-            <div className="space-y-6">
-              {loadingSteps.map((step, index) => (
+            {/* BIOS-style steps */}
+            <div className="space-y-4 text-left">
+              {BIOS_STEPS.map((step, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
-                  animate={{ 
-                    opacity: index <= currentStep ? 1 : 0.3,
-                    x: 0 
+                  animate={{
+                    opacity: index <= currentStep ? 1 : 0.25,
+                    x: 0,
                   }}
-                  transition={{ delay: index * 0.2 }}
-                  className={`flex items-center gap-4 ${
-                    index === currentStep ? 'text-primary' : 
-                    index < currentStep ? 'text-accent' : 'text-gray-500'
+                  transition={{ delay: index * 0.15 }}
+                  className={`flex items-center gap-3 ${
+                    index === currentStep
+                      ? 'text-primary'
+                      : index < currentStep
+                      ? 'text-accent'
+                      : 'text-gray-600'
                   }`}
                 >
-                  <div className={`p-2 rounded border ${
-                    index === currentStep ? 'border-primary bg-primary/10 cyber-glow' :
-                    index < currentStep ? 'border-accent/30 bg-accent/5' : 'border-gray-500/30'
-                  }`}>
+                  <div
+                    className={`p-1.5 rounded border flex-shrink-0 ${
+                      index === currentStep
+                        ? 'border-primary bg-primary/10 cyber-glow'
+                        : index < currentStep
+                        ? 'border-accent/20 bg-accent/5'
+                        : 'border-gray-700/30'
+                    }`}
+                  >
                     {step.icon}
                   </div>
-                  <span className="font-mono text-sm">{step.text}</span>
-                  {index <= currentStep && (
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: '100%' }}
-                      transition={{ duration: 0.5 }}
-                      className="flex-1 h-0.5 bg-gradient-to-r from-primary to-secondary ml-auto"
-                    />
+                  <span className="font-mono text-sm flex-1">{step.text}</span>
+                  {index < currentStep && (
+                    <span className="text-primary text-xs font-mono">✓</span>
+                  )}
+                  {index === currentStep && (
+                    <span className="inline-block w-2 h-4 bg-primary animate-blink" />
                   )}
                 </motion.div>
               ))}
             </div>
 
-            {/* Progress bar */}
+            {/* Shimmer progress bar */}
             <div className="mt-8">
-              <div className="w-full bg-cyber-gray h-1 rounded-full overflow-hidden">
+              <div className="w-full bg-cyber-gray h-1.5 rounded-full overflow-hidden relative">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: `${((currentStep + 1) / loadingSteps.length) * 100}%` }}
-                  transition={{ duration: 0.3 }}
-                  className="h-full bg-gradient-to-r from-primary to-secondary"
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.4, ease: 'easeOut' }}
+                  className="h-full rounded-full relative overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(90deg, #00ff88, #0099ff, #ff00ff)',
+                    backgroundSize: '200% 100%',
+                    animation: 'shimmer 2s ease-in-out infinite',
+                  }}
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-2 font-mono">
-                {Math.round(((currentStep + 1) / loadingSteps.length) * 100)}% Complete
+              <p className="text-xs text-gray-500 mt-2 font-mono text-right">
+                {progress}%
               </p>
             </div>
 
-            {/* Version info */}
-            <motion.div
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              className="mt-8 text-xs text-gray-500 font-mono"
+              transition={{ delay: 0.5 }}
+              className="mt-6 text-xs text-gray-600 font-mono"
             >
-              Portfolio v2.1.0 • Neural Interface Ready
-            </motion.div>
+              Portfolio v2.1.0 • System Initializing
+            </motion.p>
           </div>
         </motion.div>
       )}
