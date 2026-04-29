@@ -7,6 +7,14 @@ export default {
         primary: '#00ff88',
         secondary: '#0099ff', 
         accent: '#ffffff',
+        domain: {
+          robotics: '#00ff88',
+          embedded: '#0099ff',
+          ai: '#ff6600',
+          vision: '#ff00ff',
+          hacking: '#ff0044',
+          iot: '#00ccff',
+        },
         cyber: {
           dark: '#121212',
           darker: '#0a0a0a',
@@ -27,7 +35,14 @@ export default {
         'float': 'float 6s ease-in-out infinite',
         'cyber-glow': 'cyber-glow 2s ease-in-out infinite alternate',
         'slide-up': 'slide-up 0.6s ease-out',
-        'fade-in': 'fade-in 0.8s ease-out'
+        'fade-in': 'fade-in 0.8s ease-out',
+        'circuit-drift': 'circuit-drift 20s linear infinite',
+        'hex-pulse': 'hex-pulse 2s ease-in-out infinite alternate',
+        'glitch-flash': 'glitch-flash 0.3s ease-in-out',
+        'scanline': 'scanline 8s linear infinite',
+        'shimmer': 'shimmer 2.5s ease-in-out infinite',
+        'radar-spin': 'radar-spin 3s linear infinite',
+        'blink-cursor': 'blink 1s step-end infinite',
       },
       keyframes: {
         'matrix-rain': {
@@ -68,6 +83,34 @@ export default {
         'fade-in': {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' }
+        },
+        'circuit-drift': {
+          '0%': { strokeDashoffset: '0' },
+          '100%': { strokeDashoffset: '-400' }
+        },
+        'hex-pulse': {
+          '0%': { filter: 'brightness(1)' },
+          '100%': { filter: 'brightness(1.3)' }
+        },
+        'glitch-flash': {
+          '0%': { transform: 'translate(0)', opacity: '1' },
+          '20%': { transform: 'translate(-2px, 1px)', filter: 'hue-rotate(90deg)' },
+          '40%': { transform: 'translate(2px, -1px)', filter: 'hue-rotate(-90deg)' },
+          '60%': { transform: 'translate(-1px, 2px)', opacity: '0.8' },
+          '80%': { transform: 'translate(1px, -2px)', filter: 'hue-rotate(45deg)' },
+          '100%': { transform: 'translate(0)', opacity: '1', filter: 'none' }
+        },
+        'scanline': {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(100vh)' }
+        },
+        'shimmer': {
+          '0%': { backgroundPosition: '-200% center' },
+          '100%': { backgroundPosition: '200% center' }
+        },
+        'radar-spin': {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' }
         }
       },
       backgroundImage: {
