@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
 import { 
   Terminal,
   Github,
@@ -10,6 +10,9 @@ import {
   Cpu
 } from 'lucide-react';
 import { usePortfolioData } from '../contexts/DataContext';
+import HeroSceneFallback from './three/HeroSceneFallback';
+
+const LazyHeroScene = lazy(() => import('./three/HeroScene'));
 
 // Default roles as fallback
 const defaultRoles = [
@@ -96,6 +99,7 @@ export default function Hero() {
   const { data, isLoading } = usePortfolioData();
   const { settings } = data;
   const profile = settings?.profile;
+  const reducedMotion = useReducedMotion();
   
   // Use specializations from profile or fallback to defaults
   const roles = profile?.specializations?.length > 0 ? profile.specializations : defaultRoles;
@@ -310,7 +314,7 @@ export default function Hero() {
             </motion.div>
           </div>
 
-          {/* Right Content - Professional Profile with Tech Visualization */}
+          {/* Right Content — 3D Hero Scene + Profile Image */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -318,23 +322,27 @@ export default function Hero() {
             className="relative flex-shrink-0"
           >
             <div className="relative w-[280px] h-[280px] md:w-[350px] md:h-[350px] lg:w-[400px] lg:h-[400px]">
-              {/* Professional Profile Image */}
+              {/* 3D scene as background layer */}
+              <div className="absolute inset-0 z-0" aria-hidden="true">
+                {reducedMotion ? (
+                  <HeroSceneFallback />
+                ) : (
+                  <Suspense fallback={<HeroSceneFallback />}>
+                    <LazyHeroScene />
+                  </Suspense>
+                )}
+              </div>
+
+              {/* Profile image in foreground */}
               <div className="absolute inset-8 rounded-full overflow-hidden border-4 border-primary/50 cyber-glow hologram-effect z-10">
                 <img
                   src={profile?.profilePicture || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80"}
                   alt={`${profile?.fullName || 'Profile'} - Professional Profile`}
+                  loading="lazy"
                   className="w-full h-full object-cover filter brightness-100 contrast-105 saturate-110"
                 />
-                {/* Cyberpunk overlay effects */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-secondary/15 mix-blend-overlay" />
                 <div className="absolute inset-0 bg-gradient-to-t from-cyber-darker/30 via-transparent to-transparent" />
-                <div className="absolute inset-0 bg-cyber-dark/10 mix-blend-color" />
-              </div>
-
-              {/* Central Hub Ring */}
-              <div className="absolute inset-0 rounded-full border-2 border-primary/30 cyber-glow hologram-effect">
-                <div className="absolute inset-4 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 backdrop-blur-sm border border-primary/30">
-                </div>
               </div>
             </div>
           </motion.div>
